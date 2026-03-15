@@ -3,76 +3,194 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <title>Tortuga Desert</title>
+  <title>Tortuga: Floral Night</title>
   <style>
-    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #0d0d0d; overflow: hidden; font-family: 'Segoe UI', sans-serif; touch-action: none; }
-    canvas { background: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d); border-radius: 8px; max-width: 100%; max-height: 100%; cursor: pointer; touch-action: none; }
-    .score-board { position: absolute; top: 10px; color: #fff; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); pointer-events: none; }
+    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #05050a; overflow: hidden; font-family: 'Segoe UI', sans-serif; user-select: none; -webkit-user-select: none; }
+    canvas { background: linear-gradient(to bottom, #020111 0%, #191621 100%); border-radius: 12px; max-width: 98%; max-height: 98%; box-shadow: 0 0 50px rgba(0,0,0,1); }
+    .ui-overlay { position: absolute; top: 20px; width: 95%; max-width: 1000px; display: flex; justify-content: space-between; pointer-events: none; color: #fff; }
+    .score { font-size: 28px; font-weight: bold; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+    .btn { pointer-events: auto; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.4); color: white; cursor: pointer; backdrop-filter: blur(5px); transition: 0.2s; -webkit-tap-highlight-color: transparent; }
+    .btn:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
+    #pauseBtn { padding: 8px 15px; border-radius: 15px; font-weight: bold; }
+    #jumpBtn { position: absolute; bottom: 30px; right: 30px; width: 85px; height: 85px; border-radius: 50%; font-size: 14px; font-weight: bold; display: flex; justify-content: center; align-items: center; z-index: 10; border: 3px solid rgba(255,255,255,0.6); }
   </style>
 </head>
 <body>
-  <div class="score-board">PONTOS: <span id="score">0</span></div>
+
+  <div class="ui-overlay">
+    <div class="score">PONTOS: <span id="score">0</span></div>
+    <button id="pauseBtn" class="btn">PAUSA (P)</button>
+  </div>
+
+  <button id="jumpBtn" class="btn">PULAR</button>
   <canvas id="gameCanvas"></canvas>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const scoreElement = document.getElementById("score");
-    canvas.width = 1000; canvas.height = 450;
-    let score = 0; let gameActive = true; let speed = 7; let frame = 0;
-    const tortuga = { x: 120, y: 340, width: 80, height: 45, dy: 0, gravity: 0.7, jumpForce: 14, grounded: false };
-    const obstacles = [];
-    const clouds = Array.from({ length: 5 }, () => ({ x: Math.random() * 1200, y: 40 + Math.random() * 80, s: 0.2 + Math.random() * 0.5 }));
+    const pauseBtn = document.getElementById("pauseBtn");
+    const jumpBtn = document.getElementById("jumpBtn");
 
-    function drawTurtle() {
-      ctx.save(); ctx.translate(tortuga.x, tortuga.y);
-      let walk = Math.sin(frame * 0.15) * 8;
-      ctx.fillStyle = "#6b8e23";
-      ctx.beginPath(); ctx.ellipse(15, 35 + (tortuga.grounded ? -walk / 2 : 0), 8, 12, Math.PI / 4, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(55, 35 + (tortuga.grounded ? walk / 2 : 0), 10, 14, -Math.PI / 4, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#8fb339";
-      ctx.beginPath(); ctx.quadraticCurveTo(70, 20, 85, 10); ctx.lineTo(85, 25); ctx.lineTo(70, 30); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(90, 10, 15, 12, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(95, 7, 4, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(97, 7, 2, 0, Math.PI * 2); ctx.fill();
-      let shellGrad = ctx.createRadialGradient(40, 10, 5, 40, 20, 45);
-      shellGrad.addColorStop(0, "#4d6b1d"); shellGrad.addColorStop(1, "#1b3009");
-      ctx.fillStyle = shellGrad; ctx.beginPath(); ctx.moveTo(5, 30); ctx.bezierCurveTo(5, -10, 75, -10, 75, 30); ctx.closePath(); ctx.fill();
+    canvas.width = 1100;
+    canvas.height = 500;
+
+    let score = 0, gameActive = true, isPaused = false, speed = 8, frame = 0;
+    const obstacles = [];
+    
+    // Estrelas
+    const stars = Array.from({ length: 150 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * 350,
+      size: Math.random() * 2,
+      blink: Math.random()
+    }));
+
+    const tortuga = { x: 150, y: 380, width: 85, height: 48, dy: 0, gravity: 0.75, jumpForce: 15, grounded: false };
+
+    // --- AUDIO ---
+    let audioCtx = null;
+    function playNote(f, t, d, v = 0.1) {
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = t; o.frequency.value = f;
+      g.gain.setValueAtTime(v, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(); o.stop(audioCtx.currentTime + d);
+    }
+
+    // --- FUNÇÕES DE DESENHO ---
+    function drawFlower(x, y, color) {
+        ctx.fillStyle = color;
+        // Desenha 4 pétalas pequenas
+        ctx.beginPath(); ctx.arc(x-3, y, 3, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+3, y, 3, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x, y-3, 3, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x, y+3, 3, 0, 7); ctx.fill();
+        ctx.fillStyle = "yellow";
+        ctx.beginPath(); ctx.arc(x, y, 2, 0, 7); ctx.fill();
+    }
+
+    function drawCactus(o) {
+      ctx.save();
+      // Gradiente do corpo
+      let g = ctx.createLinearGradient(o.x, 0, o.x + o.width, 0);
+      g.addColorStop(0, "#0a1a03"); g.addColorStop(0.5, "#2d5a27"); g.addColorStop(1, "#142911");
+      ctx.fillStyle = g;
+
+      // Tronco Principal
+      ctx.beginPath();
+      ctx.roundRect(o.x, o.y - o.height, o.width, o.height, [15, 15, 0, 0]);
+      ctx.fill();
+
+      // Espinhos (pontinhos)
+      ctx.fillStyle = "rgba(255,255,255,0.2)";
+      for(let i=0; i < o.height; i += 15) {
+          ctx.fillRect(o.x + o.width/2 - 2, o.y - i, 2, 2);
+          ctx.fillRect(o.x + 5, o.y - i - 7, 2, 2);
+      }
+
+      // Braços
+      if(o.hasLeftArm) {
+          ctx.fillStyle = g;
+          ctx.fillRect(o.x - 12, o.y - o.height * 0.6, 12, 10);
+          ctx.beginPath(); ctx.roundRect(o.x - 12, o.y - o.height * 0.6 - 15, 8, 20, 5); ctx.fill();
+          if(o.flower) drawFlower(o.x - 8, o.y - o.height * 0.6 - 18, o.flowerColor);
+      }
+      if(o.hasRightArm) {
+          ctx.fillStyle = g;
+          ctx.fillRect(o.x + o.width, o.y - o.height * 0.4, 12, 10);
+          ctx.beginPath(); ctx.roundRect(o.x + o.width + 4, o.y - o.height * 0.4 - 20, 8, 25, 5); ctx.fill();
+          if(o.flower) drawFlower(o.x + o.width + 8, o.y - o.height * 0.4 - 23, o.flowerColor);
+      }
+
+      // Flor no Topo
+      if(o.flower) drawFlower(o.x + o.width/2, o.y - o.height - 5, o.flowerColor);
+
       ctx.restore();
     }
 
     function drawScenery() {
-      // Sol e Montanhas
-      ctx.fillStyle = "#fff5e1"; ctx.beginPath(); ctx.arc(850, 100, 60, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-      clouds.forEach(c => { c.x -= c.s; if(c.x < -150) c.x = canvas.width + 150; ctx.beginPath(); ctx.arc(c.x, c.y, 25, 0, Math.PI * 2); ctx.arc(c.x + 30, c.y, 35, 0, Math.PI * 2); ctx.fill(); });
-      ctx.fillStyle = "#3d1c1c";
-      for (let i = 0; i < 3; i++) { let xPos = (i * 600 - (frame * 0.2) % 1800); ctx.beginPath(); ctx.moveTo(xPos, 385); ctx.lineTo(xPos + 300, 180); ctx.lineTo(xPos + 600, 385); ctx.fill(); }
-      ctx.fillStyle = "#c27e44";
-      for (let i = 0; i < 5; i++) { let xPos = (i * 300 - (frame * 3) % 1500); ctx.beginPath(); ctx.moveTo(xPos, 385); ctx.quadraticCurveTo(xPos + 150, 300, xPos + 350, 385); ctx.fill(); }
-      let groundGrad = ctx.createLinearGradient(0, 385, 0, 450); groundGrad.addColorStop(0, "#d4a373"); groundGrad.addColorStop(1, "#8a5a2e");
-      ctx.fillStyle = groundGrad; ctx.fillRect(0, 385, canvas.width, 65);
+      // Estrelas
+      stars.forEach(s => {
+        let opacity = 0.3 + Math.abs(Math.sin(frame * 0.02 + s.blink * 10)) * 0.7;
+        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, 7); ctx.fill();
+      });
+
+      // Lua
+      ctx.fillStyle = "#fdfbd3";
+      ctx.shadowBlur = 20; ctx.shadowColor = "#fdfbd3";
+      ctx.beginPath(); ctx.arc(950, 80, 40, 0, 7); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#191621";
+      ctx.beginPath(); ctx.arc(935, 70, 40, 0, 7); ctx.fill();
+
+      // Montanhas Parallax
+      ctx.fillStyle = "#0c0b1a"; // Longe
+      for (let i = 0; i < 3; i++) {
+        let x = (i * 800 - (frame * 0.15) % 2400);
+        ctx.beginPath(); ctx.moveTo(x, 430); ctx.lineTo(x+400, 200); ctx.lineTo(x+800, 430); ctx.fill();
+      }
+      ctx.fillStyle = "#241f42"; // Dunas
+      for (let i = 0; i < 5; i++) {
+        let x = (i * 400 - (frame * 3) % 2000);
+        ctx.beginPath(); ctx.moveTo(x, 430); ctx.quadraticCurveTo(x+200, 340, x+450, 430); ctx.fill();
+      }
+
+      // Chão
+      let ground = ctx.createLinearGradient(0, 430, 0, 500);
+      ground.addColorStop(0, "#2d2850"); ground.addColorStop(1, "#151329");
+      ctx.fillStyle = ground; ctx.fillRect(0, 430, 1100, 70);
     }
 
-    function drawCactus(obs) {
-      ctx.save(); ctx.fillStyle = "#2d5a27";
-      ctx.fillRect(obs.x, obs.y - obs.height, obs.width, obs.height);
-      ctx.beginPath(); ctx.arc(obs.x + obs.width / 2, obs.y - obs.height, obs.width / 2, 0, Math.PI, true); ctx.fill();
+    function drawTurtle() {
+      ctx.save();
+      ctx.translate(tortuga.x, tortuga.y);
+      let walk = Math.sin(frame * 0.15) * 8;
+      ctx.fillStyle = "#4d6b1d";
+      ctx.beginPath(); ctx.ellipse(15, 38 + (tortuga.grounded ? -walk/2 : 0), 8, 12, 0.8, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(60, 38 + (tortuga.grounded ? walk / 2 : 0), 10, 14, -0.8, 0, 7); ctx.fill();
+      ctx.fillStyle = "#8fb339";
+      ctx.beginPath(); ctx.ellipse(95, 15, 16, 13, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(101, 12, 2, 0, 7); ctx.fill();
+      let g = ctx.createRadialGradient(40, 10, 5, 40, 20, 50);
+      g.addColorStop(0, "#3e5622"); g.addColorStop(1, "#0d1a03");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(5, 35); ctx.bezierCurveTo(5, -15, 85, -15, 85, 35); ctx.fill();
       ctx.restore();
     }
 
+    // --- LÓGICA ---
     function update() {
-      if (!gameActive) return;
-      frame++;
-      tortuga.dy += tortuga.gravity; tortuga.y += tortuga.dy;
-      if (tortuga.y > 340) { tortuga.y = 340; tortuga.dy = 0; tortuga.grounded = true; }
-      if (frame % 110 === 0) { obstacles.push({ x: canvas.width, y: 385, width: 22, height: 40 + Math.random() * 30 }); }
+      if (!gameActive || isPaused) return;
+      frame++; speed += 0.002;
+      
+      tortuga.dy += tortuga.gravity;
+      tortuga.y += tortuga.dy;
+      if (tortuga.y > 380) { tortuga.y = 380; tortuga.dy = 0; tortuga.grounded = true; }
+
+      if (frame % 110 === 0) {
+        obstacles.push({ 
+            x: 1100, 
+            y: 430, 
+            width: 25 + Math.random()*10, 
+            height: 40 + Math.random()*50, 
+            flower: true,
+            flowerColor: ["#ff4757", "#ffa502", "#e84393"][Math.floor(Math.random()*3)],
+            hasLeftArm: Math.random() > 0.5,
+            hasRightArm: Math.random() > 0.5
+        });
+      }
+
       for (let i = obstacles.length - 1; i >= 0; i--) {
         obstacles[i].x -= speed;
-        if (tortuga.x + 60 > obstacles[i].x && tortuga.x < obstacles[i].x + obstacles[i].width && tortuga.y + 35 > obstacles[i].y - obstacles[i].height) gameActive = false;
-        if (obstacles[i].x < -50) { obstacles.splice(i, 1); score++; scoreElement.innerText = score * 10; if (score % 5 === 0) speed += 0.3; }
+        if (tortuga.x + 70 > obstacles[i].x && tortuga.x < obstacles[i].x + obstacles[i].width && 
+            tortuga.y + 40 > obstacles[i].y - obstacles[i].height) {
+          gameActive = false; playNote(100, 'sawtooth', 0.6, 0.2);
+        }
+        if (obstacles[i].x < -100) { obstacles.splice(i, 1); score++; scoreElement.innerText = score * 10; }
       }
     }
 
@@ -82,24 +200,31 @@
       obstacles.forEach(drawCactus);
       drawTurtle();
       update();
-      if (gameActive) { requestAnimationFrame(loop); }
-      else {
-        ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.font = "bold 40px Arial";
-        ctx.fillText("FIM DA JORNADA", canvas.width / 2, canvas.height / 2);
-        ctx.font = "20px Arial"; ctx.fillText("Toque para reiniciar", canvas.width / 2, canvas.height / 2 + 50);
+      if (isPaused) { ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0,0,1100,500); }
+      if (gameActive) requestAnimationFrame(loop);
+      else { 
+        ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0,0,1100,500); 
+        ctx.fillStyle="white"; ctx.textAlign="center"; ctx.font="bold 50px Arial"; ctx.fillText("GAME OVER", 550, 230); 
+        ctx.font="20px Arial"; ctx.fillText("Toque para reiniciar", 550, 280);
       }
     }
 
-    function handleInput(e) {
-      if (e.cancelable) e.preventDefault();
-      if (tortuga.grounded && gameActive) { tortuga.dy = -tortuga.jumpForce; tortuga.grounded = false; }
-      else if (!gameActive) { location.reload(); }
+    function doJump() {
+      if (!gameActive) { location.reload(); return; }
+      if (isPaused) return;
+      if (tortuga.grounded) { 
+        tortuga.dy = -tortuga.jumpForce; tortuga.grounded = false; 
+        playNote(450, 'square', 0.1, 0.1); 
+      }
     }
 
-    window.addEventListener("mousedown", handleInput);
-    window.addEventListener("touchstart", handleInput, {passive: false});
-    window.addEventListener("keydown", (e) => { if(e.code === "Space") handleInput(e); });
+    // Eventos
+    pauseBtn.onclick = (e) => { e.stopPropagation(); isPaused = !isPaused; pauseBtn.innerText = isPaused ? "VOLTAR" : "PAUSA"; };
+    jumpBtn.onmousedown = (e) => { e.stopPropagation(); doJump(); };
+    jumpBtn.ontouchstart = (e) => { e.preventDefault(); e.stopPropagation(); doJump(); };
+    window.onmousedown = (e) => { if(e.target.tagName !== 'BUTTON') doJump(); };
+    window.onkeydown = (e) => { if(e.code === "Space") doJump(); if(e.code === "KeyP") pauseBtn.onclick(e); };
+
     loop();
   </script>
 </body>
