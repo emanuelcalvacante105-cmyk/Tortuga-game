@@ -9,7 +9,7 @@
   "orientation": "landscape",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/528/528101.png",
+      "src": "./icone.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
