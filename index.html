@@ -1,150 +1,44 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Tortuga: Final Controls</title>
+  <!-- Conecta o Manifesto -->
+  <link rel="manifest" href="manifest.json">
+  <title>Tortuga: Floral Night</title>
   <style>
-    body {
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #05050a;
-      overflow: hidden;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      user-select: none;
-      -webkit-user-select: none;
+    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #05050a; overflow: hidden; font-family: 'Segoe UI', sans-serif; user-select: none; -webkit-user-select: none; }
+    canvas { background: linear-gradient(to bottom, #020111 0%, #191621 100%); border-radius: 12px; max-width: 98%; max-height: 98%; box-shadow: 0 0 50px rgba(0,0,0,1); }
+    
+    /* Notificação de Instalação (Banner Superior) */
+    #installBanner {
+      position: fixed; top: 15px; background: white; color: #333; 
+      padding: 12px 20px; border-radius: 12px; display: none; 
+      align-items: center; justify-content: space-between;
+      width: 90%; max-width: 400px; z-index: 200; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: bold;
     }
+    #installBanner button { background: #8fb339; border: none; color: white; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-left: 10px; }
 
-    canvas {
-      background: linear-gradient(to bottom, #020111 0%, #191621 100%);
-      border-radius: 12px;
-      max-width: 98%;
-      max-height: 98%;
-      box-shadow: 0 0 50px rgba(0, 0, 0, 1);
-    }
-
-    /* Overlay de Menu e Game Over */
-    .overlay {
-      position: absolute;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: white;
-      z-index: 50;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
-
-    #startMenu {
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(8px);
-      pointer-events: auto;
-    }
-
-    .ui-top {
-      position: absolute;
-      top: 20px;
-      width: 95%;
-      max-width: 1000px;
-      display: flex;
-      justify-content: space-between;
-      pointer-events: none;
-      color: #fff;
-      z-index: 40;
-    }
-
-    h1 {
-      font-size: 60px;
-      margin: 0;
-      color: #8fb339;
-      text-shadow: 0 0 20px rgba(143, 179, 57, 0.5);
-      letter-spacing: 5px;
-    }
-
-    p {
-      font-size: 18px;
-      opacity: 0.8;
-      margin-bottom: 30px;
-    }
-
-    .score {
-      font-size: 28px;
-      font-weight: bold;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-    }
-
-    /* Estilo dos Botões */
-    .btn {
-      pointer-events: auto;
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid rgba(255, 255, 255, 0.4);
-      color: white;
-      cursor: pointer;
-      backdrop-filter: blur(5px);
-      transition: 0.2s;
-      -webkit-tap-highlight-color: transparent;
-      outline: none;
-    }
-
-    .btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: scale(1.05);
-    }
-
-    .btn:active {
-      transform: scale(0.95);
-    }
-
-    #startBtn {
-      padding: 15px 40px;
-      border-radius: 40px;
-      font-size: 20px;
-      font-weight: bold;
-      border-color: #8fb339;
-      color: #8fb339;
-    }
-
-    #pauseBtn {
-      padding: 8px 15px;
-      border-radius: 15px;
-      font-weight: bold;
-      display: none;
-    }
-
-    /* Botão de Pulo Único */
-    #jumpBtn {
-      position: absolute;
-      bottom: 30px;
-      right: 30px;
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      font-size: 16px;
-      font-weight: bold;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 60;
-      border: 3px solid #8fb339;
-      color: #8fb339;
-      background: rgba(0, 0, 0, 0.4);
-      box-shadow: 0 0 15px rgba(143, 179, 57, 0.3);
-    }
+    /* Estilos das Telas */
+    .overlay { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; z-index: 50; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+    #startMenu { background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); pointer-events: auto; }
+    .ui-top { position: absolute; top: 20px; width: 95%; max-width: 1000px; display: flex; justify-content: space-between; pointer-events: none; color: #fff; z-index: 40; }
+    h1 { font-size: 60px; margin: 0; color: #8fb339; letter-spacing: 5px; }
+    .btn { pointer-events: auto; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.4); color: white; cursor: pointer; backdrop-filter: blur(5px); }
+    #startBtn { padding: 15px 40px; border-radius: 40px; font-size: 20px; font-weight: bold; border-color: #8fb339; color: #8fb339; }
+    #pauseBtn { padding: 8px 15px; border-radius: 15px; font-weight: bold; display: none; }
+    #jumpBtn { position: absolute; bottom: 30px; right: 30px; width: 90px; height: 90px; border-radius: 50%; font-size: 16px; font-weight: bold; display: none; justify-content: center; align-items: center; z-index: 60; border: 3px solid #8fb339; color: #8fb339; background: rgba(0, 0, 0, 0.4); }
   </style>
 </head>
-
 <body>
 
-  <!-- Menu Inicial -->
+  <!-- A Notificação de Baixar -->
+  <div id="installBanner">
+    <span>Deseja baixar Tortuga?</span>
+    <button id="btnInstall">BAIXAR</button>
+  </div>
+
   <div id="startMenu" class="overlay">
     <h1>TORTUGA</h1>
     <p>O DESERTO FLORIDO</p>
@@ -152,7 +46,7 @@
   </div>
 
   <div class="ui-top">
-    <div class="score">PONTOS: <span id="score">0</span></div>
+    <div style="font-size:28px">SCORE: <span id="score">0</span></div>
     <button id="pauseBtn" class="btn">PAUSA (P)</button>
   </div>
 
@@ -160,108 +54,90 @@
   <canvas id="gameCanvas"></canvas>
 
   <script>
+    // --- LÓGICA DE INSTALAÇÃO ---
+    let deferredPrompt;
+    const installBanner = document.getElementById('installBanner');
+    const btnInstall = document.getElementById('btnInstall');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBanner.style.display = 'flex'; // Mostra a notificação
+    });
+
+    btnInstall.addEventListener('click', () => {
+      installBanner.style.display = 'none';
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choice) => {
+        deferredPrompt = null;
+      });
+    });
+
+    // Registra o Service Worker (Obrigatório para PWA)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+
+    // --- CÓDIGO DO JOGO ---
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const scoreElement = document.getElementById("score");
     const pauseBtn = document.getElementById("pauseBtn");
     const jumpBtn = document.getElementById("jumpBtn");
     const startMenu = document.getElementById("startMenu");
-    canvas.width = 1100;
-    canvas.height = 500;
-    let gameState = 'MENU';
-    let score = 0,
-      isPaused = false,
-      speed = 8,
-      frame = 0;
-    const obstacles = [];
-    const stars = Array.from({
-      length: 150
-    }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * 350,
-      size: Math.random() * 2,
-      blink: Math.random()
-    }));
-    const tortuga = {
-      x: 150,
-      y: 380,
-      width: 85,
-      height: 48,
-      dy: 0,
-      gravity: 0.75,
-      jumpForce: 15,
-      grounded: false
-    };
-    let audioCtx = null;
 
+    canvas.width = 1100; canvas.height = 500;
+    let gameState = 'MENU', score = 0, isPaused = false, speed = 8, frame = 0;
+    const obstacles = [];
+    const stars = Array.from({ length: 150 }, () => ({ x: Math.random() * canvas.width, y: Math.random() * 350, size: Math.random() * 2, blink: Math.random() }));
+    const tortuga = { x: 150, y: 380, width: 85, height: 48, dy: 0, gravity: 0.75, jumpForce: 15, grounded: false };
+
+    let audioCtx = null;
     function playNote(f, t, d, v = 0.1) {
-      if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)();
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.type = t;
-      o.frequency.value = f;
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+      o.type = t; o.frequency.value = f;
       g.gain.setValueAtTime(v, audioCtx.currentTime);
       g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
-      o.connect(g);
-      g.connect(audioCtx.destination);
-      o.start();
-      o.stop(audioCtx.currentTime + d);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(); o.stop(audioCtx.currentTime + d);
     }
 
     function startGame() {
-      if (audioCtx) audioCtx.resume();
-      gameState = 'PLAYING';
-      startMenu.style.display = 'none';
-      pauseBtn.style.display = 'block';
-      jumpBtn.style.display = 'flex';
-      playNote(523.25, 'sine', 0.3, 0.1);
+        if(audioCtx) audioCtx.resume();
+        gameState = 'PLAYING';
+        startMenu.style.display = 'none';
+        pauseBtn.style.display = 'block';
+        jumpBtn.style.display = 'flex';
+        playNote(523.25, 'sine', 0.3, 0.1);
     }
 
     function drawFlower(x, y, color) {
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(x - 3, y, 3, 0, 7);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x + 3, y, 3, 0, 7);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x, y - 3, 3, 0, 7);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x, y + 3, 3, 0, 7);
-      ctx.fill();
-      ctx.fillStyle = "yellow";
-      ctx.beginPath();
-      ctx.arc(x, y, 2, 0, 7);
-      ctx.fill();
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(x-3, y, 3, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+3, y, 3, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x, y-3, 3, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(x, y+3, 3, 0, 7); ctx.fill();
+        ctx.fillStyle = "yellow"; ctx.beginPath(); ctx.arc(x, y, 2, 0, 7); ctx.fill();
     }
 
     function drawCactus(o) {
       ctx.save();
       let g = ctx.createLinearGradient(o.x, 0, o.x + o.width, 0);
-      g.addColorStop(0, "#0a1a03");
-      g.addColorStop(0.5, "#2d5a27");
-      g.addColorStop(1, "#142911");
+      g.addColorStop(0, "#0a1a03"); g.addColorStop(0.5, "#2d5a27"); g.addColorStop(1, "#142911");
       ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.roundRect(o.x, o.y - o.height, o.width, o.height, [15, 15, 0, 0]);
-      ctx.fill();
-      if (o.hasLeftArm) {
-        ctx.fillRect(o.x - 12, o.y - o.height * 0.6, 12, 10);
-        ctx.beginPath();
-        ctx.roundRect(o.x - 12, o.y - o.height * 0.6 - 15, 8, 20, 5);
-        ctx.fill();
-        if (o.flower) drawFlower(o.x - 8, o.y - o.height * 0.6 - 18, o.flowerColor);
+      ctx.beginPath(); ctx.roundRect(o.x, o.y - o.height, o.width, o.height, [15, 15, 0, 0]); ctx.fill();
+      if(o.hasLeftArm) {
+          ctx.fillRect(o.x - 12, o.y - o.height * 0.6, 12, 10);
+          ctx.beginPath(); ctx.roundRect(o.x - 12, o.y - o.height * 0.6 - 15, 8, 20, 5); ctx.fill();
+          if(o.flower) drawFlower(o.x - 8, o.y - o.height * 0.6 - 18, o.flowerColor);
       }
-      if (o.hasRightArm) {
-        ctx.fillRect(o.x + o.width, o.y - o.height * 0.4, 12, 10);
-        ctx.beginPath();
-        ctx.roundRect(o.x + o.width + 4, o.y - o.height * 0.4 - 20, 8, 25, 5);
-        ctx.fill();
-        if (o.flower) drawFlower(o.x + o.width + 8, o.y - o.height * 0.4 - 23, o.flowerColor);
+      if(o.hasRightArm) {
+          ctx.fillRect(o.x + o.width, o.y - o.height * 0.4, 12, 10);
+          ctx.beginPath(); ctx.roundRect(o.x + o.width + 4, o.y - o.height * 0.4 - 20, 8, 25, 5); ctx.fill();
+          if(o.flower) drawFlower(o.x + o.width + 8, o.y - o.height * 0.4 - 23, o.flowerColor);
       }
-      if (o.flower) drawFlower(o.x + o.width / 2, o.y - o.height - 5, o.flowerColor);
+      if(o.flower) drawFlower(o.x + o.width/2, o.y - o.height - 5, o.flowerColor);
       ctx.restore();
     }
 
@@ -269,173 +145,75 @@
       stars.forEach(s => {
         let opacity = 0.3 + Math.abs(Math.sin(frame * 0.02 + s.blink * 10)) * 0.7;
         ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, 7);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, 7); ctx.fill();
       });
-      ctx.fillStyle = "#fdfbd3";
-      ctx.beginPath();
-      ctx.arc(950, 80, 40, 0, 7);
-      ctx.fill();
-      ctx.fillStyle = "#191621";
-      ctx.beginPath();
-      ctx.arc(935, 70, 40, 0, 7);
-      ctx.fill();
+      ctx.fillStyle = "#fdfbd3"; ctx.beginPath(); ctx.arc(950, 80, 40, 0, 7); ctx.fill();
+      ctx.fillStyle = "#191621"; ctx.beginPath(); ctx.arc(935, 70, 40, 0, 7); ctx.fill();
       ctx.fillStyle = "#0c0b1a";
-      for (let i = 0; i < 3; i++) {
-        let x = (i * 800 - (frame * 0.15) % 2400);
-        ctx.beginPath();
-        ctx.moveTo(x, 430);
-        ctx.lineTo(x + 400, 200);
-        ctx.lineTo(x + 800, 430);
-        ctx.fill();
-      }
+      for (let i = 0; i < 3; i++) { let x = (i * 800 - (frame * 0.15) % 2400); ctx.beginPath(); ctx.moveTo(x, 430); ctx.lineTo(x+400, 200); ctx.lineTo(x+800, 430); ctx.fill(); }
       ctx.fillStyle = "#241f42";
-      for (let i = 0; i < 5; i++) {
-        let x = (i * 400 - (frame * 3) % 2000);
-        ctx.beginPath();
-        ctx.moveTo(x, 430);
-        ctx.quadraticCurveTo(x + 200, 340, x + 450, 430);
-        ctx.fill();
-      }
+      for (let i = 0; i < 5; i++) { let x = (i * 400 - (frame * 3) % 2000); ctx.beginPath(); ctx.moveTo(x, 430); ctx.quadraticCurveTo(x+200, 340, x+450, 430); ctx.fill(); }
       let ground = ctx.createLinearGradient(0, 430, 0, 500);
-      ground.addColorStop(0, "#2d2850");
-      ground.addColorStop(1, "#151329");
-      ctx.fillStyle = ground;
-      ctx.fillRect(0, 430, 1100, 70);
+      ground.addColorStop(0, "#2d2850"); ground.addColorStop(1, "#151329");
+      ctx.fillStyle = ground; ctx.fillRect(0, 430, 1100, 70);
     }
 
     function drawTurtle() {
-      ctx.save();
-      ctx.translate(tortuga.x, tortuga.y);
+      ctx.save(); ctx.translate(tortuga.x, tortuga.y);
       let walk = (gameState === 'PLAYING' && !isPaused) ? Math.sin(frame * 0.15) * 8 : 0;
       ctx.fillStyle = "#4d6b1d";
-      ctx.beginPath();
-      ctx.ellipse(15, 38 + (tortuga.grounded ? -walk / 2 : 0), 8, 12, 0.8, 0, 7);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(60, 38 + (tortuga.grounded ? walk / 2 : 0), 10, 14, -0.8, 0, 7);
-      ctx.fill();
-      ctx.fillStyle = "#8fb339";
-      ctx.beginPath();
-      ctx.ellipse(95, 15, 16, 13, 0, 0, 7);
-      ctx.fill();
-      ctx.fillStyle = "black";
-      ctx.beginPath();
-      ctx.arc(101, 12, 2, 0, 7);
-      ctx.fill();
+      ctx.beginPath(); ctx.ellipse(15, 38 + (tortuga.grounded ? -walk/2 : 0), 8, 12, 0.8, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(60, 38 + (tortuga.grounded ? walk / 2 : 0), 10, 14, -0.8, 0, 7); ctx.fill();
+      ctx.fillStyle = "#8fb339"; ctx.beginPath(); ctx.ellipse(95, 15, 16, 13, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(101, 12, 2, 0, 7); ctx.fill();
       let g = ctx.createRadialGradient(40, 10, 5, 40, 20, 50);
-      g.addColorStop(0, "#3e5622");
-      g.addColorStop(1, "#0d1a03");
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.moveTo(5, 35);
-      ctx.bezierCurveTo(5, -15, 85, -15, 85, 35);
-      ctx.fill();
+      g.addColorStop(0, "#3e5622"); g.addColorStop(1, "#0d1a03");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(5, 35); ctx.bezierCurveTo(5, -15, 85, -15, 85, 35); ctx.fill();
       ctx.restore();
     }
 
     function update() {
       if (gameState !== 'PLAYING' || isPaused) return;
-      frame++;
-      speed += 0.002;
-      tortuga.dy += tortuga.gravity;
-      tortuga.y += tortuga.dy;
-      if (tortuga.y > 380) {
-        tortuga.y = 380;
-        tortuga.dy = 0;
-        tortuga.grounded = true;
-      }
+      frame++; speed += 0.002;
+      tortuga.dy += tortuga.gravity; tortuga.y += tortuga.dy;
+      if (tortuga.y > 380) { tortuga.y = 380; tortuga.dy = 0; tortuga.grounded = true; }
       if (frame % 110 === 0) {
-        obstacles.push({
-          x: 1100,
-          y: 430,
-          width: 25 + Math.random() * 10,
-          height: 40 + Math.random() * 50,
-          flower: true,
-          flowerColor: ["#ff4757", "#ffa502", "#e84393"][Math.floor(Math.random() * 3)],
-          hasLeftArm: Math.random() > 0.5,
-          hasRightArm: Math.random() > 0.5
-        });
+        obstacles.push({ x: 1100, y: 430, width: 25 + Math.random()*10, height: 40 + Math.random()*50, flower: true, flowerColor: ["#ff4757", "#ffa502", "#e84393"][Math.floor(Math.random()*3)], hasLeftArm: Math.random() > 0.5, hasRightArm: Math.random() > 0.5 });
       }
       for (let i = obstacles.length - 1; i >= 0; i--) {
         obstacles[i].x -= speed;
         if (tortuga.x + 70 > obstacles[i].x && tortuga.x < obstacles[i].x + obstacles[i].width && tortuga.y + 40 > obstacles[i].y - obstacles[i].height) {
-          gameState = 'GAMEOVER';
-          playNote(100, 'sawtooth', 0.6, 0.2);
+          gameState = 'GAMEOVER'; playNote(100, 'sawtooth', 0.6, 0.2);
         }
-        if (obstacles[i].x < -100) {
-          obstacles.splice(i, 1);
-          score++;
-          scoreElement.innerText = score * 10;
-        }
+        if (obstacles[i].x < -100) { obstacles.splice(i, 1); score++; scoreElement.innerText = score * 10; }
       }
     }
 
     function loop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawScenery();
-      if (gameState === 'PLAYING' || gameState === 'GAMEOVER') obstacles.forEach(drawCactus);
+      if(gameState === 'PLAYING' || gameState === 'GAMEOVER') obstacles.forEach(drawCactus);
       drawTurtle();
       update();
-      if (isPaused) {
-        ctx.fillStyle = "rgba(0,0,0,0.5)";
-        ctx.fillRect(0, 0, 1100, 500);
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.font = "bold 40px Arial";
-        ctx.fillText("JOGO PAUSADO", 550, 250);
-      }
-      if (gameState === 'GAMEOVER') {
-        ctx.fillStyle = "rgba(0,0,0,0.8)";
-        ctx.fillRect(0, 0, 1100, 500);
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.font = "bold 50px Arial";
-        ctx.fillText("FIM DA JORNADA", 550, 230);
-        ctx.font = "22px Arial";
-        ctx.fillText("Toque em qualquer lugar para reiniciar", 550, 290);
-      }
+      if (isPaused) { ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0,0,1100,500); ctx.fillStyle="white"; ctx.textAlign="center"; ctx.font="bold 40px Arial"; ctx.fillText("JOGO PAUSADO", 550, 250); }
+      if (gameState === 'GAMEOVER') { ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0,0,1100,500); ctx.fillStyle="white"; ctx.textAlign="center"; ctx.font="bold 50px Arial"; ctx.fillText("FIM DA JORNADA", 550, 230); ctx.font="22px Arial"; ctx.fillText("Toque para reiniciar", 550, 290); }
       requestAnimationFrame(loop);
     }
-    // --- FUNÇÃO DE PULO ---
+
     function doJump() {
+      if (gameState === 'GAMEOVER') { location.reload(); return; }
       if (gameState !== 'PLAYING' || isPaused) return;
-      if (tortuga.grounded) {
-        tortuga.dy = -tortuga.jumpForce;
-        tortuga.grounded = false;
-        playNote(450, 'square', 0.1, 0.1);
-      }
+      if (tortuga.grounded) { tortuga.dy = -tortuga.jumpForce; tortuga.grounded = false; playNote(450, 'square', 0.1, 0.1); }
     }
-    // --- CONTROLES REFEITOS ---
-    // 1. Pulo pelo Botão
-    jumpBtn.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      doJump();
-    });
-    jumpBtn.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      doJump();
-    });
-    // 2. Reiniciar pelo clique Global (apenas no Game Over)
-    window.addEventListener('mousedown', (e) => {
-      if (gameState === 'GAMEOVER') location.reload();
-    });
-    window.addEventListener('touchstart', (e) => {
-      if (gameState === 'GAMEOVER') location.reload();
-    });
-    // 3. Pausa e Teclado
-    pauseBtn.onclick = (e) => {
-      e.stopPropagation();
-      isPaused = !isPaused;
-      pauseBtn.innerText = isPaused ? "VOLTAR" : "PAUSA";
-    };
-    window.onkeydown = (e) => {
-      if (e.code === "Space") doJump();
-      if (e.code === "KeyP") pauseBtn.onclick(e);
-    };
+
+    jumpBtn.addEventListener('mousedown', (e) => { e.preventDefault(); doJump(); });
+    jumpBtn.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); doJump(); });
+    window.addEventListener('mousedown', (e) => { if (gameState === 'GAMEOVER') location.reload(); });
+    window.addEventListener('touchstart', (e) => { if (gameState === 'GAMEOVER') location.reload(); });
+    pauseBtn.onclick = (e) => { e.stopPropagation(); isPaused = !isPaused; pauseBtn.innerText = isPaused ? "VOLTAR" : "PAUSA"; };
+    window.onkeydown = (e) => { if (e.code === "Space") doJump(); if (e.code === "KeyP") pauseBtn.onclick(e); };
+
     loop();
   </script>
 </body>
-
 </html>
