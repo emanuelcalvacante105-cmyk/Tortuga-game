@@ -10,90 +10,82 @@
     body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #05050a; overflow: hidden; font-family: sans-serif; user-select: none; }
     canvas { background: linear-gradient(to bottom, #020111, #191621); border-radius: 12px; max-width: 98%; max-height: 98%; }
     
-    /* TELA DE CARREGAMENTO FORÇADA */
-    #loadingScreen { 
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-      background: #05050a; display: flex; flex-direction: column; 
-      align-items: center; justify-content: center; z-index: 999; 
-    }
-    .bar-bg { width: 280px; height: 12px; background: #111; border-radius: 6px; margin-top: 20px; border: 1px solid #333; overflow: hidden; }
-    #bar-fill { width: 0%; height: 100%; background: #8fb339; box-shadow: 0 0 15px #8fb339; transition: width 0.3s ease; }
-    #loadMsg { color: #8fb339; margin-top: 15px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+    /* TELAS */
+    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; z-index: 100; }
+    
+    /* CARREGAMENTO */
+    #loadingScreen { background: #05050a; z-index: 200; transition: opacity 0.5s; }
+    .bar-bg { width: 250px; height: 10px; background: #222; border-radius: 5px; margin-top: 15px; border: 1px solid #444; }
+    #bar-fill { width: 0%; height: 100%; background: #8fb339; border-radius: 5px; box-shadow: 0 0 10px #8fb339; }
 
-    /* MENU INICIAL */
-    #startMenu { 
-      position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.6); 
-      backdrop-filter: blur(10px); display: none; flex-direction: column; 
-      align-items: center; justify-content: center; color: white; z-index: 100; 
-    }
-    h1 { font-size: 70px; color: #8fb339; margin: 0; letter-spacing: 8px; font-style: italic; }
+    /* MENU */
+    #startMenu { background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: none; }
+    h1 { font-size: 60px; color: #8fb339; margin: 0; letter-spacing: 5px; }
 
     /* BOTÕES */
-    .btn { background: rgba(255,255,255,0.05); border: 2px solid #8fb339; color: #8fb339; padding: 15px 45px; border-radius: 40px; font-size: 22px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-    .btn:hover { background: #8fb339; color: white; }
-    
-    #jumpBtn { position: absolute; bottom: 30px; right: 30px; width: 95px; height: 95px; border-radius: 50%; display: none; z-index: 60; background: rgba(0,0,0,0.5); border: 3px solid #8fb339; color: #8fb339; font-weight: bold; }
+    .btn { background: rgba(255,255,255,0.1); border: 2px solid #8fb339; color: #8fb339; padding: 15px 40px; border-radius: 40px; font-size: 20px; font-weight: bold; cursor: pointer; pointer-events: auto; }
+    #jumpBtn { position: absolute; bottom: 30px; right: 30px; width: 90px; height: 90px; border-radius: 50%; display: none; z-index: 60; background: rgba(0,0,0,0.5); border: 3px solid #8fb339; color: #8fb339; font-weight: bold; }
 
-    /* UI TOPO */
-    .ui-top { position: absolute; top: 20px; width: 90%; display: none; justify-content: space-between; align-items: center; z-index: 50; color: white; pointer-events: none; }
-    #pauseBtn { pointer-events: auto; padding: 6px 15px; font-size: 14px; }
+    /* UI */
+    .ui-top { position: absolute; top: 20px; width: 90%; display: none; justify-content: space-between; color: white; z-index: 50; pointer-events: none; }
+    #installBanner { position: fixed; top: 10px; background: white; color: black; padding: 10px; border-radius: 10px; display: none; z-index: 300; font-weight: bold; align-items: center; }
   </style>
 </head>
 <body>
 
-  <!-- 1. TELA DE CARREGAMENTO (ESTA É A QUE VAI APARECER PRIMEIRO) -->
-  <div id="loadingScreen">
-    <div style="color:white; font-size: 20px; letter-spacing: 5px;">TORTUGA</div>
+  <div id="loadingScreen" class="screen">
+    <div style="color:#8fb339; letter-spacing:3px;">CARREGANDO...</div>
     <div class="bar-bg"><div id="bar-fill"></div></div>
-    <div id="loadMsg">Semeando o deserto...</div>
   </div>
 
-  <!-- 2. MENU INICIAL -->
-  <div id="startMenu">
+  <div id="installBanner">
+    <span>Baixar Tortuga?</span>
+    <button onclick="installApp()" style="margin-left:10px; background:#8fb339; border:none; color:white; padding:5px 10px; border-radius:5px;">SIM</button>
+  </div>
+
+  <div id="startMenu" class="screen">
     <h1>TORTUGA</h1>
-    <p style="color:white; opacity:0.6; letter-spacing:3px; margin-bottom: 30px;">O DESERTO FLORIDO</p>
-    <button class="btn" onclick="startGame()">INICIAR JORNADA</button>
+    <p style="opacity:0.7; letter-spacing:2px;">DESERTO FLORIDO</p>
+    <button class="btn" onclick="startGame()">INICIAR</button>
   </div>
 
-  <!-- 3. UI JOGANDO -->
   <div class="ui-top" id="gameUI">
-    <div style="font-size: 28px; font-weight: bold;">PONTOS: <span id="score">0</span></div>
-    <button class="btn" id="pauseBtn">PAUSA</button>
+    <div style="font-size: 24px;">PONTOS: <span id="score">0</span></div>
+    <button class="btn" id="pauseBtn" style="padding:5px 15px; font-size:14px;">PAUSA</button>
   </div>
 
-  <button id="jumpBtn" class="btn">PULAR</button>
+  <button id="jumpBtn">PULAR</button>
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // --- LÓGICA DO CARREGAMENTO ---
-    const msgs = ["Aquecendo o sol...", "Polindo o casco...", "Plantando cactos...", "Quase lá...", "Pronto!"];
+    // 1. CARREGAMENTO
     let progress = 0;
-    
-    // Intervalo mais lento para dar tempo de ver a barra encher
-    const loadInterval = setInterval(() => {
-      progress += Math.random() * 15; // Aumenta o progresso de forma aleatória
-      if (progress > 100) progress = 100;
-      
+    const loadInt = setInterval(() => {
+      progress += 2;
       document.getElementById('bar-fill').style.width = progress + '%';
-      document.getElementById('loadMsg').innerText = msgs[Math.floor(progress / 21)];
-
-      if (progress >= 100) {
-        clearInterval(loadInterval);
-        setTimeout(showMenu, 500); // Dá meio segundo de folga quando chega em 100%
+      if(progress >= 100) {
+        clearInterval(loadInt);
+        document.getElementById('loadingScreen').style.opacity = '0';
+        setTimeout(() => {
+          document.getElementById('loadingScreen').style.display = 'none';
+          document.getElementById('startMenu').style.display = 'flex';
+        }, 500);
       }
-    }, 250); // Velocidade do carregamento
+    }, 30);
 
-    function showMenu() {
-      const ls = document.getElementById('loadingScreen');
-      ls.style.transition = "opacity 0.8s";
-      ls.style.opacity = "0";
-      setTimeout(() => {
-        ls.style.display = "none";
-        document.getElementById('startMenu').style.display = "flex";
-      }, 800);
+    // 2. PWA E INSTALAÇÃO
+    let defPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault(); defPrompt = e;
+      document.getElementById('installBanner').style.display = 'flex';
+    });
+    function installApp() {
+      document.getElementById('installBanner').style.display = 'none';
+      defPrompt.prompt();
     }
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
-    // --- CÓDIGO DO JOGO ---
+    // 3. CONFIGURAÇÕES DO JOGO
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     canvas.width = 1000; canvas.height = 450;
@@ -101,9 +93,10 @@
     let gameState = 'MENU';
     let score = 0, isPaused = false, speed = 8, frame = 0;
     const obstacles = [];
-    const stars = Array.from({ length: 80 }, () => ({ x: Math.random() * 1000, y: Math.random() * 300, size: Math.random() * 2 }));
+    const stars = Array.from({ length: 100 }, () => ({ x: Math.random() * 1000, y: Math.random() * 300, size: Math.random() * 2 }));
     const tortuga = { x: 150, y: 340, width: 80, height: 45, dy: 0, gravity: 0.7, jumpForce: 14, grounded: false };
 
+    // 4. ÁUDIO
     let audioCtx = null;
     function snd(f, t, d) {
       if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -115,6 +108,7 @@
       o.start(); o.stop(audioCtx.currentTime + d);
     }
 
+    // 5. FUNÇÕES PRINCIPAIS
     function startGame() {
       if(audioCtx) audioCtx.resume();
       gameState = 'PLAYING';
@@ -133,6 +127,12 @@
       }
     }
 
+    function drawCactus(o) {
+      ctx.fillStyle = "#2d5a27";
+      ctx.fillRect(o.x, o.y - o.height, o.width, o.height); // Tronco
+      if(o.flower) { ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(o.x + o.width/2, o.y - o.height - 5, 5, 0, 7); ctx.fill(); }
+    }
+
     function drawScenery() {
       stars.forEach(s => { ctx.fillStyle = "white"; ctx.fillRect(s.x, s.y, s.size, s.size); });
       ctx.fillStyle = "#fdfbd3"; ctx.beginPath(); ctx.arc(900, 80, 40, 0, 7); ctx.fill(); // Lua
@@ -141,11 +141,11 @@
 
     function drawTurtle() {
       ctx.save(); ctx.translate(tortuga.x, tortuga.y);
-      ctx.fillStyle = "#4d6b1d";
+      ctx.fillStyle = "#4d6b1d"; // Patas
       let walk = (gameState === 'PLAYING' && !isPaused) ? Math.sin(frame * 0.15) * 8 : 0;
       ctx.fillRect(10, 35 + walk, 15, 10); ctx.fillRect(50, 35 - walk, 15, 10);
-      ctx.fillStyle = "#8fb339"; ctx.fillRect(80, 10, 20, 15); 
-      ctx.fillStyle = "#3e5622"; ctx.beginPath(); ctx.moveTo(0, 35); ctx.quadraticCurveTo(40, -10, 80, 35); ctx.fill();
+      ctx.fillStyle = "#8fb339"; ctx.fillRect(80, 10, 20, 15); // Cabeça
+      ctx.fillStyle = "#3e5622"; ctx.beginPath(); ctx.moveTo(0, 35); ctx.quadraticCurveTo(40, -10, 80, 35); ctx.fill(); // Casco
       ctx.restore();
     }
 
@@ -169,19 +169,15 @@
     function loop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawScenery();
-      if(gameState === 'PLAYING' || gameState === 'GAMEOVER') {
-        obstacles.forEach(o => {
-          ctx.fillStyle = "#2d5a27"; ctx.fillRect(o.x, o.y - o.height, o.width, o.height);
-          if(o.flower) { ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(o.x + o.width/2, o.y - o.height - 5, 5, 0, 7); ctx.fill(); }
-        });
-      }
+      if(gameState === 'PLAYING' || gameState === 'GAMEOVER') obstacles.forEach(drawCactus);
       drawTurtle();
       update();
       if (isPaused) { ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0,0,1000,450); }
-      if (gameState === 'GAMEOVER') { ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0,0,1000,450); ctx.fillStyle="white"; ctx.textAlign="center"; ctx.font="30px Arial"; ctx.fillText("GAME OVER - Toque para reiniciar", 500, 225); }
+      if (gameState === 'GAMEOVER') { ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0,0,1000,450); ctx.fillStyle="white"; ctx.textAlign="center"; ctx.font="30px Arial"; ctx.fillText("GAME OVER - Clique para reiniciar", 500, 225); }
       requestAnimationFrame(loop);
     }
 
+    // EVENTOS
     document.getElementById('pauseBtn').onclick = (e) => { e.stopPropagation(); isPaused = !isPaused; document.getElementById('pauseBtn').innerText = isPaused ? "VOLTAR" : "PAUSA"; };
     document.getElementById('jumpBtn').onmousedown = (e) => { e.preventDefault(); doJump(); };
     document.getElementById('jumpBtn').ontouchstart = (e) => { e.preventDefault(); e.stopPropagation(); doJump(); };
