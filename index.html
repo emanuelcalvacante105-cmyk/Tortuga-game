@@ -5,144 +5,123 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icone.png">
-  <title>Tortuga: Floral Night</title>
+  <title>Tortuga Desert</title>
   <style>
-    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #05050a; overflow: hidden; font-family: 'Segoe UI', sans-serif; user-select: none; -webkit-user-select: none; }
-    canvas { background: linear-gradient(to bottom, #020111 0%, #191621 100%); border-radius: 12px; max-width: 98%; max-height: 98%; box-shadow: 0 0 50px rgba(0,0,0,1); }
+    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #05050a; overflow: hidden; font-family: sans-serif; user-select: none; }
+    canvas { background: linear-gradient(to bottom, #020111, #191621); border-radius: 12px; max-width: 98%; max-height: 98%; }
     
-    /* TELAS DE INTERFACE */
-    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; z-index: 100; transition: opacity 0.8s ease; }
-    
-    /* TELA DE CARREGAMENTO */
-    #loadingScreen { background: #05050a; z-index: 200; }
-    .loader-bar { width: 300px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
-    #progress { width: 0%; height: 100%; background: #8fb339; box-shadow: 0 0 15px #8fb339; transition: width 0.1s; }
-    #loadStatus { font-size: 14px; margin-top: 10px; opacity: 0.6; letter-spacing: 2px; }
+    /* TELA DE CARREGAMENTO FORÇADA */
+    #loadingScreen { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background: #05050a; display: flex; flex-direction: column; 
+      align-items: center; justify-content: center; z-index: 999; 
+    }
+    .bar-bg { width: 280px; height: 12px; background: #111; border-radius: 6px; margin-top: 20px; border: 1px solid #333; overflow: hidden; }
+    #bar-fill { width: 0%; height: 100%; background: #8fb339; box-shadow: 0 0 15px #8fb339; transition: width 0.3s ease; }
+    #loadMsg { color: #8fb339; margin-top: 15px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
 
     /* MENU INICIAL */
-    #startMenu { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); display: none; opacity: 0; }
-    
-    h1 { font-size: 80px; margin: 0; color: #8fb339; text-shadow: 0 0 20px rgba(143, 179, 57, 0.6); letter-spacing: 10px; font-style: italic; }
-    p.subtitle { font-size: 20px; opacity: 0.7; letter-spacing: 3px; margin-bottom: 40px; }
+    #startMenu { 
+      position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.6); 
+      backdrop-filter: blur(10px); display: none; flex-direction: column; 
+      align-items: center; justify-content: center; color: white; z-index: 100; 
+    }
+    h1 { font-size: 70px; color: #8fb339; margin: 0; letter-spacing: 8px; font-style: italic; }
 
     /* BOTÕES */
-    .btn { pointer-events: auto; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.4); color: white; cursor: pointer; backdrop-filter: blur(5px); transition: 0.2s; outline: none; }
-    .btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); border-color: #8fb339; }
+    .btn { background: rgba(255,255,255,0.05); border: 2px solid #8fb339; color: #8fb339; padding: 15px 45px; border-radius: 40px; font-size: 22px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    .btn:hover { background: #8fb339; color: white; }
     
-    #playBtn { padding: 18px 50px; border-radius: 50px; font-size: 24px; font-weight: bold; color: #8fb339; border-color: #8fb339; }
+    #jumpBtn { position: absolute; bottom: 30px; right: 30px; width: 95px; height: 95px; border-radius: 50%; display: none; z-index: 60; background: rgba(0,0,0,0.5); border: 3px solid #8fb339; color: #8fb339; font-weight: bold; }
 
-    /* UI DO JOGO */
-    #jumpBtn { position: absolute; bottom: 30px; right: 30px; width: 95px; height: 95px; border-radius: 50%; font-weight: bold; display: none; z-index: 60; border: 3px solid #8fb339; color: #8fb339; background: rgba(0, 0, 0, 0.5); }
-    .ui-top { position: absolute; top: 20px; width: 90%; display: none; justify-content: space-between; align-items: center; z-index: 50; pointer-events: none; color: white; }
-    #pauseBtn { padding: 8px 15px; border-radius: 12px; pointer-events: auto; }
-
-    /* BANNER PWA */
-    #installBanner { position: fixed; top: 15px; background: white; color: #333; padding: 12px 20px; border-radius: 12px; display: none; align-items: center; justify-content: space-between; width: 90%; max-width: 400px; z-index: 300; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: bold; }
-    #installBtn { background: #1a2a6c; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+    /* UI TOPO */
+    .ui-top { position: absolute; top: 20px; width: 90%; display: none; justify-content: space-between; align-items: center; z-index: 50; color: white; pointer-events: none; }
+    #pauseBtn { pointer-events: auto; padding: 6px 15px; font-size: 14px; }
   </style>
 </head>
 <body>
 
-  <!-- 1. TELA DE CARREGAMENTO -->
-  <div id="loadingScreen" class="screen">
-    <div style="font-size: 24px; color: #8fb339; letter-spacing: 5px;">CARREGANDO</div>
-    <div class="loader-bar"><div id="progress"></div></div>
-    <div id="loadStatus">Preparando deserto...</div>
+  <!-- 1. TELA DE CARREGAMENTO (ESTA É A QUE VAI APARECER PRIMEIRO) -->
+  <div id="loadingScreen">
+    <div style="color:white; font-size: 20px; letter-spacing: 5px;">TORTUGA</div>
+    <div class="bar-bg"><div id="bar-fill"></div></div>
+    <div id="loadMsg">Semeando o deserto...</div>
   </div>
 
-  <!-- 2. BANNER PWA -->
-  <div id="installBanner">
-    <span>Baixar Tortuga?</span>
-    <button id="installBtn">BAIXAR</button>
-  </div>
-
-  <!-- 3. TELA INICIAL (MENU) -->
-  <div id="startMenu" class="screen">
+  <!-- 2. MENU INICIAL -->
+  <div id="startMenu">
     <h1>TORTUGA</h1>
-    <p class="subtitle">DESERTO FLORIDO</p>
-    <button id="playBtn" class="btn">INICIAR JORNADA</button>
-    <div style="margin-top: 30px; font-size: 14px; opacity: 0.5;">Aperte o botão PULAR para saltar</div>
+    <p style="color:white; opacity:0.6; letter-spacing:3px; margin-bottom: 30px;">O DESERTO FLORIDO</p>
+    <button class="btn" onclick="startGame()">INICIAR JORNADA</button>
   </div>
 
-  <!-- 4. UI DURANTE O JOGO -->
+  <!-- 3. UI JOGANDO -->
   <div class="ui-top" id="gameUI">
     <div style="font-size: 28px; font-weight: bold;">PONTOS: <span id="score">0</span></div>
-    <button id="pauseBtn" class="btn">PAUSA (P)</button>
+    <button class="btn" id="pauseBtn">PAUSA</button>
   </div>
 
   <button id="jumpBtn" class="btn">PULAR</button>
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // --- LÓGICA DE CARREGAMENTO (SIMULADO) ---
-    let loadPercent = 0;
-    const statusTexts = ["Limpando casco...", "Preparando estrelas...", "Semeando flores...", "Polindo a lua...", "Quase lá!"];
+    // --- LÓGICA DO CARREGAMENTO ---
+    const msgs = ["Aquecendo o sol...", "Polindo o casco...", "Plantando cactos...", "Quase lá...", "Pronto!"];
+    let progress = 0;
     
-    const loadingInterval = setInterval(() => {
-        loadPercent += Math.random() * 5;
-        if (loadPercent >= 100) {
-            loadPercent = 100;
-            clearInterval(loadingInterval);
-            finishLoading();
-        }
-        document.getElementById('progress').style.width = loadPercent + '%';
-        document.getElementById('loadStatus').innerText = statusTexts[Math.floor(loadPercent / 21)];
-    }, 100);
+    // Intervalo mais lento para dar tempo de ver a barra encher
+    const loadInterval = setInterval(() => {
+      progress += Math.random() * 15; // Aumenta o progresso de forma aleatória
+      if (progress > 100) progress = 100;
+      
+      document.getElementById('bar-fill').style.width = progress + '%';
+      document.getElementById('loadMsg').innerText = msgs[Math.floor(progress / 21)];
 
-    function finishLoading() {
-        const ls = document.getElementById('loadingScreen');
-        const sm = document.getElementById('startMenu');
-        ls.style.opacity = '0';
-        setTimeout(() => {
-            ls.style.display = 'none';
-            sm.style.display = 'flex';
-            setTimeout(() => { sm.style.opacity = '1'; }, 50);
-        }, 800);
+      if (progress >= 100) {
+        clearInterval(loadInterval);
+        setTimeout(showMenu, 500); // Dá meio segundo de folga quando chega em 100%
+      }
+    }, 250); // Velocidade do carregamento
+
+    function showMenu() {
+      const ls = document.getElementById('loadingScreen');
+      ls.style.transition = "opacity 0.8s";
+      ls.style.opacity = "0";
+      setTimeout(() => {
+        ls.style.display = "none";
+        document.getElementById('startMenu').style.display = "flex";
+      }, 800);
     }
 
-    // --- LÓGICA DE INSTALAÇÃO ---
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault(); deferredPrompt = e;
-      document.getElementById('installBanner').style.display = 'flex';
-    });
-    document.getElementById('installBtn').onclick = () => {
-      document.getElementById('installBanner').style.display = 'none';
-      deferredPrompt.prompt();
-    };
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-
-    // --- VARIÁVEIS DO JOGO ---
+    // --- CÓDIGO DO JOGO ---
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    canvas.width = 1100; canvas.height = 500;
+    canvas.width = 1000; canvas.height = 450;
 
-    let gameState = 'MENU'; 
+    let gameState = 'MENU';
     let score = 0, isPaused = false, speed = 8, frame = 0;
     const obstacles = [];
-    const stars = Array.from({ length: 150 }, () => ({ x: Math.random() * 1100, y: Math.random() * 350, size: Math.random() * 2, blink: Math.random() }));
-    const tortuga = { x: 150, y: 380, width: 85, height: 48, dy: 0, gravity: 0.75, jumpForce: 15, grounded: false };
+    const stars = Array.from({ length: 80 }, () => ({ x: Math.random() * 1000, y: Math.random() * 300, size: Math.random() * 2 }));
+    const tortuga = { x: 150, y: 340, width: 80, height: 45, dy: 0, gravity: 0.7, jumpForce: 14, grounded: false };
 
-    // --- SOM ---
     let audioCtx = null;
-    function playNote(f, t, d, v = 0.1) {
+    function snd(f, t, d) {
       if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
       o.type = t; o.frequency.value = f;
-      g.gain.setValueAtTime(v, audioCtx.currentTime);
+      g.gain.setValueAtTime(0.1, audioCtx.currentTime);
       g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
       o.connect(g); g.connect(audioCtx.destination);
       o.start(); o.stop(audioCtx.currentTime + d);
     }
 
-    // --- COMANDOS ---
     function startGame() {
-        if(audioCtx) audioCtx.resume();
-        gameState = 'PLAYING';
-        document.getElementById('startMenu').style.display = 'none';
-        document.getElementById('gameUI').style.display = 'flex';
-        document.getElementById('jumpBtn').style.display = 'flex';
-        playNote(523, 'sine', 0.3, 0.1);
+      if(audioCtx) audioCtx.resume();
+      gameState = 'PLAYING';
+      document.getElementById('startMenu').style.display = 'none';
+      document.getElementById('gameUI').style.display = 'flex';
+      document.getElementById('jumpBtn').style.display = 'block';
+      snd(523, 'sine', 0.3);
     }
 
     function doJump() {
@@ -150,66 +129,23 @@
       if (gameState !== 'PLAYING' || isPaused) return;
       if (tortuga.grounded) { 
         tortuga.dy = -tortuga.jumpForce; tortuga.grounded = false; 
-        playNote(450, 'square', 0.1, 0.1); 
+        snd(400, 'square', 0.1); 
       }
-    }
-
-    // --- DESENHOS ---
-    function drawFlower(x, y, color) {
-        ctx.fillStyle = color;
-        ctx.beginPath(); ctx.arc(x-3, y, 3, 0, 7); ctx.fill();
-        ctx.beginPath(); ctx.arc(x+3, y, 3, 0, 7); ctx.fill();
-        ctx.fillStyle = "yellow"; ctx.beginPath(); ctx.arc(x, y, 2, 0, 7); ctx.fill();
-    }
-
-    function drawCactus(o) {
-      ctx.save();
-      let g = ctx.createLinearGradient(o.x, 0, o.x + o.width, 0);
-      g.addColorStop(0, "#0a1a03"); g.addColorStop(0.5, "#2d5a27"); g.addColorStop(1, "#142911");
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.roundRect(o.x, o.y - o.height, o.width, o.height, [15, 15, 0, 0]); ctx.fill();
-      if(o.hasLeftArm) {
-          ctx.fillRect(o.x - 12, o.y - o.height * 0.6, 12, 10);
-          ctx.beginPath(); ctx.roundRect(o.x - 12, o.y - o.height * 0.6 - 15, 8, 20, 5); ctx.fill();
-          if(o.flower) drawFlower(o.x - 8, o.y - o.height * 0.6 - 18, o.flowerColor);
-      }
-      if(o.hasRightArm) {
-          ctx.fillRect(o.x + o.width, o.y - o.height * 0.4, 12, 10);
-          ctx.beginPath(); ctx.roundRect(o.x + o.width + 4, o.y - o.height * 0.4 - 20, 8, 25, 5); ctx.fill();
-          if(o.flower) drawFlower(o.x + o.width + 8, o.y - o.height * 0.4 - 23, o.flowerColor);
-      }
-      if(o.flower) drawFlower(o.x + o.width/2, o.y - o.height - 5, o.flowerColor);
-      ctx.restore();
     }
 
     function drawScenery() {
-      stars.forEach(s => {
-        let opacity = 0.3 + Math.abs(Math.sin(frame * 0.02 + s.blink * 10)) * 0.7;
-        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-        ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, 7); ctx.fill();
-      });
-      ctx.fillStyle = "#fdfbd3"; ctx.beginPath(); ctx.arc(950, 80, 40, 0, 7); ctx.fill();
-      ctx.fillStyle = "#191621"; ctx.beginPath(); ctx.arc(935, 70, 40, 0, 7); ctx.fill();
-      ctx.fillStyle = "#0c0b1a";
-      for (let i = 0; i < 3; i++) { let x = (i * 800 - (frame * 0.15) % 2400); ctx.beginPath(); ctx.moveTo(x, 430); ctx.lineTo(x+400, 200); ctx.lineTo(x+800, 430); ctx.fill(); }
-      ctx.fillStyle = "#241f42";
-      for (let i = 0; i < 5; i++) { let x = (i * 400 - (frame * 3) % 2000); ctx.beginPath(); ctx.moveTo(x, 430); ctx.quadraticCurveTo(x+200, 340, x+450, 430); ctx.fill(); }
-      let ground = ctx.createLinearGradient(0, 430, 0, 500);
-      ground.addColorStop(0, "#2d2850"); ground.addColorStop(1, "#151329");
-      ctx.fillStyle = ground; ctx.fillRect(0, 430, 1100, 70);
+      stars.forEach(s => { ctx.fillStyle = "white"; ctx.fillRect(s.x, s.y, s.size, s.size); });
+      ctx.fillStyle = "#fdfbd3"; ctx.beginPath(); ctx.arc(900, 80, 40, 0, 7); ctx.fill(); // Lua
+      ctx.fillStyle = "#d4a373"; ctx.fillRect(0, 385, 1000, 70); // Chão
     }
 
     function drawTurtle() {
       ctx.save(); ctx.translate(tortuga.x, tortuga.y);
-      let walk = (gameState === 'PLAYING' && !isPaused) ? Math.sin(frame * 0.15) * 8 : 0;
       ctx.fillStyle = "#4d6b1d";
-      ctx.beginPath(); ctx.ellipse(15, 38 + (tortuga.grounded ? -walk/2 : 0), 8, 12, 0.8, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(60, 38 + (tortuga.grounded ? walk / 2 : 0), 10, 14, -0.8, 0, 7); ctx.fill();
-      ctx.fillStyle = "#8fb339"; ctx.beginPath(); ctx.ellipse(95, 15, 16, 13, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(101, 12, 2, 0, 7); ctx.fill();
-      let g = ctx.createRadialGradient(40, 10, 5, 40, 20, 50);
-      g.addColorStop(0, "#3e5622"); g.addColorStop(1, "#0d1a03");
-      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(5, 35); ctx.bezierCurveTo(5, -15, 85, -15, 85, 35); ctx.fill();
+      let walk = (gameState === 'PLAYING' && !isPaused) ? Math.sin(frame * 0.15) * 8 : 0;
+      ctx.fillRect(10, 35 + walk, 15, 10); ctx.fillRect(50, 35 - walk, 15, 10);
+      ctx.fillStyle = "#8fb339"; ctx.fillRect(80, 10, 20, 15); 
+      ctx.fillStyle = "#3e5622"; ctx.beginPath(); ctx.moveTo(0, 35); ctx.quadraticCurveTo(40, -10, 80, 35); ctx.fill();
       ctx.restore();
     }
 
@@ -217,33 +153,36 @@
       if (gameState !== 'PLAYING' || isPaused) return;
       frame++; speed += 0.002;
       tortuga.dy += tortuga.gravity; tortuga.y += tortuga.dy;
-      if (tortuga.y > 380) { tortuga.y = 380; tortuga.dy = 0; tortuga.grounded = true; }
+      if (tortuga.y > 340) { tortuga.y = 340; tortuga.dy = 0; tortuga.grounded = true; }
       if (frame % 110 === 0) {
-        obstacles.push({ x: 1100, y: 430, width: 25 + Math.random()*10, height: 40 + Math.random()*50, flower: true, flowerColor: ["#ff4757", "#ffa502", "#e84393"][Math.floor(Math.random()*3)], hasLeftArm: Math.random() > 0.5, hasRightArm: Math.random() > 0.5 });
+        obstacles.push({ x: 1000, y: 385, width: 25, height: 40 + Math.random()*40, flower: Math.random() > 0.5 });
       }
       for (let i = obstacles.length - 1; i >= 0; i--) {
         obstacles[i].x -= speed;
-        if (tortuga.x + 70 > obstacles[i].x && tortuga.x < obstacles[i].x + obstacles[i].width && tortuga.y + 40 > obstacles[i].y - obstacles[i].height) {
-          gameState = 'GAMEOVER'; playNote(100, 'sawtooth', 0.6, 0.2);
+        if (tortuga.x + 60 > obstacles[i].x && tortuga.x < obstacles[i].x + obstacles[i].width && tortuga.y + 30 > obstacles[i].y - obstacles[i].height) {
+          gameState = 'GAMEOVER'; snd(100, 'sawtooth', 0.5);
         }
-        if (obstacles[i].x < -100) { obstacles.splice(i, 1); score++; document.getElementById('score').innerText = score * 10; }
+        if (obstacles[i].x < -50) { obstacles.splice(i, 1); score++; document.getElementById('score').innerText = score * 10; }
       }
     }
 
     function loop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawScenery();
-      if(gameState === 'PLAYING' || gameState === 'GAMEOVER') obstacles.forEach(drawCactus);
+      if(gameState === 'PLAYING' || gameState === 'GAMEOVER') {
+        obstacles.forEach(o => {
+          ctx.fillStyle = "#2d5a27"; ctx.fillRect(o.x, o.y - o.height, o.width, o.height);
+          if(o.flower) { ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(o.x + o.width/2, o.y - o.height - 5, 5, 0, 7); ctx.fill(); }
+        });
+      }
       drawTurtle();
       update();
-      if (isPaused) { ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0,0,1100,500); ctx.fillStyle="white"; ctx.textAlign="center"; ctx.font="bold 40px Arial"; ctx.fillText("JOGO PAUSADO", 550, 250); }
-      if (gameState === 'GAMEOVER') { ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0,0,1100,500); ctx.fillStyle="white"; ctx.textAlign="center"; ctx.font="bold 50px Arial"; ctx.fillText("FIM DA JORNADA", 550, 230); ctx.font="22px Arial"; ctx.fillText("Clique para reiniciar", 550, 290); }
+      if (isPaused) { ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0,0,1000,450); }
+      if (gameState === 'GAMEOVER') { ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0,0,1000,450); ctx.fillStyle="white"; ctx.textAlign="center"; ctx.font="30px Arial"; ctx.fillText("GAME OVER - Toque para reiniciar", 500, 225); }
       requestAnimationFrame(loop);
     }
 
-    // EVENTOS
-    document.getElementById('playBtn').onclick = startGame;
-    document.getElementById('pauseBtn').onclick = (e) => { e.stopPropagation(); isPaused = !isPaused; document.getElementById('pauseBtn').innerText = isPaused ? "VOLTAR" : "PAUSA (P)"; };
+    document.getElementById('pauseBtn').onclick = (e) => { e.stopPropagation(); isPaused = !isPaused; document.getElementById('pauseBtn').innerText = isPaused ? "VOLTAR" : "PAUSA"; };
     document.getElementById('jumpBtn').onmousedown = (e) => { e.preventDefault(); doJump(); };
     document.getElementById('jumpBtn').ontouchstart = (e) => { e.preventDefault(); e.stopPropagation(); doJump(); };
     window.onmousedown = () => { if (gameState === 'GAMEOVER') location.reload(); };
