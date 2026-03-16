@@ -5,16 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icone.png">
-  <title>Tortuga: Desert Trek</title>
+  <title>Tortuga: Floral Night</title>
   <style>
     body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #05050a; overflow: hidden; font-family: 'Segoe UI', sans-serif; user-select: none; -webkit-user-select: none; }
     canvas { background: linear-gradient(to bottom, #020111 0%, #191621 100%); border-radius: 12px; max-width: 98%; max-height: 98%; box-shadow: 0 0 50px rgba(0,0,0,1); }
     
     /* TELAS DE INTERFACE */
-    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; z-index: 100; transition: 0.5s; }
+    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; z-index: 100; transition: opacity 0.8s ease; }
     
+    /* TELA DE CARREGAMENTO */
+    #loadingScreen { background: #05050a; z-index: 200; }
+    .loader-bar { width: 300px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
+    #progress { width: 0%; height: 100%; background: #8fb339; box-shadow: 0 0 15px #8fb339; transition: width 0.1s; }
+    #loadStatus { font-size: 14px; margin-top: 10px; opacity: 0.6; letter-spacing: 2px; }
+
     /* MENU INICIAL */
-    #startMenu { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); }
+    #startMenu { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); display: none; opacity: 0; }
     
     h1 { font-size: 80px; margin: 0; color: #8fb339; text-shadow: 0 0 20px rgba(143, 179, 57, 0.6); letter-spacing: 10px; font-style: italic; }
     p.subtitle { font-size: 20px; opacity: 0.7; letter-spacing: 3px; margin-bottom: 40px; }
@@ -25,35 +31,40 @@
     
     #playBtn { padding: 18px 50px; border-radius: 50px; font-size: 24px; font-weight: bold; color: #8fb339; border-color: #8fb339; }
 
-    /* BOTÃO DE PULO (GAME) */
+    /* UI DO JOGO */
     #jumpBtn { position: absolute; bottom: 30px; right: 30px; width: 95px; height: 95px; border-radius: 50%; font-weight: bold; display: none; z-index: 60; border: 3px solid #8fb339; color: #8fb339; background: rgba(0, 0, 0, 0.5); }
-
-    /* UI DE TOPO */
     .ui-top { position: absolute; top: 20px; width: 90%; display: none; justify-content: space-between; align-items: center; z-index: 50; pointer-events: none; color: white; }
     #pauseBtn { padding: 8px 15px; border-radius: 12px; pointer-events: auto; }
 
-    /* BANNER DE INSTALAÇÃO */
-    #installBanner { position: fixed; top: 15px; background: white; color: #333; padding: 12px 20px; border-radius: 12px; display: none; align-items: center; justify-content: space-between; width: 90%; max-width: 400px; z-index: 200; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: bold; }
+    /* BANNER PWA */
+    #installBanner { position: fixed; top: 15px; background: white; color: #333; padding: 12px 20px; border-radius: 12px; display: none; align-items: center; justify-content: space-between; width: 90%; max-width: 400px; z-index: 300; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: bold; }
     #installBtn { background: #1a2a6c; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-  <!-- BANNER PWA -->
+  <!-- 1. TELA DE CARREGAMENTO -->
+  <div id="loadingScreen" class="screen">
+    <div style="font-size: 24px; color: #8fb339; letter-spacing: 5px;">CARREGANDO</div>
+    <div class="loader-bar"><div id="progress"></div></div>
+    <div id="loadStatus">Preparando deserto...</div>
+  </div>
+
+  <!-- 2. BANNER PWA -->
   <div id="installBanner">
     <span>Baixar Tortuga?</span>
     <button id="installBtn">BAIXAR</button>
   </div>
 
-  <!-- TELA INICIAL (MENU) -->
+  <!-- 3. TELA INICIAL (MENU) -->
   <div id="startMenu" class="screen">
     <h1>TORTUGA</h1>
     <p class="subtitle">DESERTO FLORIDO</p>
     <button id="playBtn" class="btn">INICIAR JORNADA</button>
-    <div style="margin-top: 30px; font-size: 14px; opacity: 0.5;">Use o botão PULAR para saltar</div>
+    <div style="margin-top: 30px; font-size: 14px; opacity: 0.5;">Aperte o botão PULAR para saltar</div>
   </div>
 
-  <!-- UI DURANTE O JOGO -->
+  <!-- 4. UI DURANTE O JOGO -->
   <div class="ui-top" id="gameUI">
     <div style="font-size: 28px; font-weight: bold;">PONTOS: <span id="score">0</span></div>
     <button id="pauseBtn" class="btn">PAUSA (P)</button>
@@ -63,6 +74,32 @@
   <canvas id="gameCanvas"></canvas>
 
   <script>
+    // --- LÓGICA DE CARREGAMENTO (SIMULADO) ---
+    let loadPercent = 0;
+    const statusTexts = ["Limpando casco...", "Preparando estrelas...", "Semeando flores...", "Polindo a lua...", "Quase lá!"];
+    
+    const loadingInterval = setInterval(() => {
+        loadPercent += Math.random() * 5;
+        if (loadPercent >= 100) {
+            loadPercent = 100;
+            clearInterval(loadingInterval);
+            finishLoading();
+        }
+        document.getElementById('progress').style.width = loadPercent + '%';
+        document.getElementById('loadStatus').innerText = statusTexts[Math.floor(loadPercent / 21)];
+    }, 100);
+
+    function finishLoading() {
+        const ls = document.getElementById('loadingScreen');
+        const sm = document.getElementById('startMenu');
+        ls.style.opacity = '0';
+        setTimeout(() => {
+            ls.style.display = 'none';
+            sm.style.display = 'flex';
+            setTimeout(() => { sm.style.opacity = '1'; }, 50);
+        }, 800);
+    }
+
     // --- LÓGICA DE INSTALAÇÃO ---
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -80,7 +117,7 @@
     const ctx = canvas.getContext("2d");
     canvas.width = 1100; canvas.height = 500;
 
-    let gameState = 'MENU'; // MENU, PLAYING, GAMEOVER
+    let gameState = 'MENU'; 
     let score = 0, isPaused = false, speed = 8, frame = 0;
     const obstacles = [];
     const stars = Array.from({ length: 150 }, () => ({ x: Math.random() * 1100, y: Math.random() * 350, size: Math.random() * 2, blink: Math.random() }));
