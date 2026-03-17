@@ -3,188 +3,260 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" href="icone.png">
-  <title>Tortuga Desert</title>
+  <title>Tortuga: Nitro Desert</title>
   <style>
-    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #05050a; overflow: hidden; font-family: sans-serif; user-select: none; }
-    canvas { background: linear-gradient(to bottom, #020111, #191621); border-radius: 12px; max-width: 98%; max-height: 98%; }
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;700&display=swap');
+    :root { --p: #777; --bg: #020111; --btn-bg: rgba(45, 45, 45, 0.9); --btn-border: #666; }
     
-    /* TELAS */
-    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; z-index: 100; }
-    
-    /* CARREGAMENTO */
-    #loadingScreen { background: #05050a; z-index: 200; transition: opacity 0.5s; }
-    .bar-bg { width: 250px; height: 10px; background: #222; border-radius: 5px; margin-top: 15px; border: 1px solid #444; }
-    #bar-fill { width: 0%; height: 100%; background: #8fb339; border-radius: 5px; box-shadow: 0 0 10px #8fb339; }
+    body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #000; overflow: hidden; font-family: 'Montserrat', sans-serif; }
+    canvas { border-radius: 20px; box-shadow: 0 0 100px rgba(255, 255, 255, 0.05); }
 
-    /* MENU */
-    #startMenu { background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); display: none; }
-    h1 { font-size: 60px; color: #8fb339; margin: 0; letter-spacing: 5px; }
+    /* TELA DE CARREGAMENTO (SPLASH SCREEN) */
+    #loadingScreen { 
+      position: absolute; inset: 0; background: #05050a; 
+      display: flex; flex-direction: column; align-items: center; justify-content: center; 
+      z-index: 1000; transition: opacity 0.8s ease; 
+    }
+    .loading-logo {
+      width: 120px; height: 120px; margin-bottom: 30px;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; }
+    }
+    .bar-bg { width: 200px; height: 4px; background: #222; border-radius: 10px; overflow: hidden; }
+    #bar-fill { width: 0%; height: 100%; background: #fff; box-shadow: 0 0 15px #fff; transition: width 0.2s; }
+    .loading-text { color: #fff; font-size: 10px; letter-spacing: 4px; margin-top: 15px; opacity: 0.5; }
 
-    /* BOTÕES */
-    .btn { background: rgba(255,255,255,0.1); border: 2px solid #8fb339; color: #8fb339; padding: 15px 40px; border-radius: 40px; font-size: 20px; font-weight: bold; cursor: pointer; pointer-events: auto; }
-    #jumpBtn { position: absolute; bottom: 30px; right: 30px; width: 90px; height: 90px; border-radius: 50%; display: none; z-index: 60; background: rgba(0,0,0,0.5); border: 3px solid #8fb339; color: #8fb339; font-weight: bold; }
-
-    /* UI */
-    .ui-top { position: absolute; top: 20px; width: 90%; display: none; justify-content: space-between; color: white; z-index: 50; pointer-events: none; }
-    #installBanner { position: fixed; top: 10px; background: white; color: black; padding: 10px; border-radius: 10px; display: none; z-index: 300; font-weight: bold; align-items: center; }
+    /* UI GERAL */
+    .overlay { position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; color: white; z-index: 10; }
+    .glass { background: rgba(15, 15, 15, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; pointer-events: auto; }
+    .btn { background: var(--btn-bg); border: 1px solid var(--btn-border); color: #fff; padding: 12px 25px; border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+    .btn:hover { background: #444; transform: scale(1.05); }
+    .btn-icon { width: 50px; height: 50px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px; background: var(--btn-bg); border: 1px solid var(--btn-border); color: white; pointer-events: auto; }
+    .hud-top { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .stamina-bar { width: 150px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 5px; margin-top: 10px; overflow: hidden; }
+    #staminaFillHud { width: 100%; height: 100%; background: #fff; transition: 0.1s; }
+    .action-menu { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; pointer-events: auto; }
+    .center-screen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: auto; }
+    #jumpBtn { position: absolute; bottom: 40px; right: 40px; width: 100px; height: 100px; border-radius: 50%; border: 2px solid #555; background: rgba(40, 40, 40, 0.6); color: white; font-weight: bold; cursor: pointer; pointer-events: auto; z-index: 20; display: none; outline: none; }
+    .paused-tag { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 50px; font-weight: 900; display: none; }
+    .speed-tag { font-size: 10px; color: #ffeb3b; margin-top: 5px; font-weight: bold; text-align: center; display: block; }
   </style>
 </head>
 <body>
 
-  <div id="loadingScreen" class="screen">
-    <div style="color:#8fb339; letter-spacing:3px;">CARREGANDO...</div>
+  <!-- TELA DE CARREGAMENTO -->
+  <div id="loadingScreen">
+    <!-- Ícone de Tartaruga em SVG (Você pode trocar por uma <img src="logo.png">) -->
+    <div class="loading-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 10C30 10 15 25 15 45C15 55 20 65 30 70L25 85H35L40 75H60L65 85H75L70 70C80 65 85 55 85 45C85 25 70 10 50 10Z" fill="#8fb339"/>
+        <path d="M75 40C82 40 88 45 88 52C88 59 82 64 75 64V40Z" fill="#8fb339"/>
+        <circle cx="40" cy="35" r="4" fill="#020111"/>
+        <circle cx="60" cy="35" r="4" fill="#020111"/>
+        <path d="M30 45Q50 35 70 45" stroke="#2a3b17" stroke-width="2" fill="none"/>
+      </svg>
+    </div>
     <div class="bar-bg"><div id="bar-fill"></div></div>
+    <div class="loading-text">CARREGANDO DESERTO</div>
   </div>
 
-  <div id="installBanner">
-    <span>Baixar Tortuga?</span>
-    <button onclick="installApp()" style="margin-left:10px; background:#8fb339; border:none; color:white; padding:5px 10px; border-radius:5px;">SIM</button>
-  </div>
+  <div class="overlay">
+    <div class="hud-top" id="hud" style="display: none;">
+      <div class="glass">
+        <div style="font-size: 11px; opacity: 0.6;">DISTÂNCIA</div>
+        <div style="font-size: 24px; font-weight: 700;"><span id="scoreVal">0</span>m</div>
+        <div class="stamina-bar"><div id="staminaFillHud"></div></div>
+        <span id="speedIndicator" class="speed-tag">VELOCIDADE: 1x</span>
+      </div>
+      <div class="glass" style="text-align: right;">
+        <div style="font-size: 11px; opacity: 0.6;">RECORD</div>
+        <div style="font-size: 20px;" id="recordVal">0</div>
+      </div>
+    </div>
 
-  <div id="startMenu" class="screen">
-    <h1>TORTUGA</h1>
-    <p style="opacity:0.7; letter-spacing:2px;">DESERTO FLORIDO</p>
-    <button class="btn" onclick="startGame()">INICIAR</button>
-  </div>
+    <div class="action-menu" id="actionMenu" style="display: none;">
+      <button class="btn btn-icon" onclick="togglePause()">⏸</button>
+      <button class="btn btn-icon" id="slowMoBtn" onmousedown="startSlowMo()" onmouseup="stopSlowMo()" ontouchstart="startSlowMo()" ontouchend="stopSlowMo()">❄️</button>
+      <button class="btn btn-icon" onclick="changeSkin()">🎨</button>
+      <button class="btn btn-icon" onclick="toggleMute()" id="muteBtn">🔊</button>
+    </div>
 
-  <div class="ui-top" id="gameUI">
-    <div style="font-size: 24px;">PONTOS: <span id="score">0</span></div>
-    <button class="btn" id="pauseBtn" style="padding:5px 15px; font-size:14px;">PAUSA</button>
+    <div id="startMenu" class="center-screen glass" style="display: none;">
+      <h1 style="font-size: 45px; margin: 0; letter-spacing: 8px;">TORTUGA</h1>
+      <p style="opacity: 0.5; font-size: 10px; letter-spacing: 4px; margin-bottom: 20px;">NITRO DESERT</p>
+      <button class="btn" onclick="initGame()">Iniciar Corrida</button>
+    </div>
+
+    <div id="gameOver" class="center-screen glass" style="display: none;">
+      <h2 style="color: #ff5252;">FIM DE JOGO</h2>
+      <p id="finalScore" style="font-weight: bold; font-size: 20px;"></p>
+      <button class="btn" onclick="resetGame()">Recomeçar</button>
+    </div>
+    <div id="pausedTag" class="paused-tag">PAUSADO</div>
   </div>
 
   <button id="jumpBtn">PULAR</button>
   <canvas id="gameCanvas"></canvas>
 
   <script>
-    // 1. CARREGAMENTO
-    let progress = 0;
-    const loadInt = setInterval(() => {
-      progress += 2;
-      document.getElementById('bar-fill').style.width = progress + '%';
-      if(progress >= 100) {
-        clearInterval(loadInt);
-        document.getElementById('loadingScreen').style.opacity = '0';
-        setTimeout(() => {
-          document.getElementById('loadingScreen').style.display = 'none';
-          document.getElementById('startMenu').style.display = 'flex';
-        }, 500);
-      }
-    }, 30);
-
-    // 2. PWA E INSTALAÇÃO
-    let defPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault(); defPrompt = e;
-      document.getElementById('installBanner').style.display = 'flex';
-    });
-    function installApp() {
-      document.getElementById('installBanner').style.display = 'none';
-      defPrompt.prompt();
-    }
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-
-    // 3. CONFIGURAÇÕES DO JOGO
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    canvas.width = 1000; canvas.height = 450;
+    const baseW = 1000, baseH = 450;
+    canvas.width = baseW; canvas.height = baseH;
 
-    let gameState = 'MENU';
-    let score = 0, isPaused = false, speed = 8, frame = 0;
-    const obstacles = [];
-    const stars = Array.from({ length: 100 }, () => ({ x: Math.random() * 1000, y: Math.random() * 300, size: Math.random() * 2 }));
-    const tortuga = { x: 150, y: 340, width: 80, height: 45, dy: 0, gravity: 0.7, jumpForce: 14, grounded: false };
-
-    // 4. ÁUDIO
-    let audioCtx = null;
-    function snd(f, t, d) {
-      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-      o.type = t; o.frequency.value = f;
-      g.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
-      o.connect(g); g.connect(audioCtx.destination);
-      o.start(); o.stop(audioCtx.currentTime + d);
-    }
-
-    // 5. FUNÇÕES PRINCIPAIS
-    function startGame() {
-      if(audioCtx) audioCtx.resume();
-      gameState = 'PLAYING';
-      document.getElementById('startMenu').style.display = 'none';
-      document.getElementById('gameUI').style.display = 'flex';
-      document.getElementById('jumpBtn').style.display = 'block';
-      snd(523, 'sine', 0.3);
-    }
-
-    function doJump() {
-      if (gameState === 'GAMEOVER') location.reload();
-      if (gameState !== 'PLAYING' || isPaused) return;
-      if (tortuga.grounded) { 
-        tortuga.dy = -tortuga.jumpForce; tortuga.grounded = false; 
-        snd(400, 'square', 0.1); 
+    let state = 'LOADING', isPaused = false, isMuted = false;
+    let score = 0, highScore = localStorage.getItem('tortugaNitro_v2') || 0;
+    let frame = 0, speed = 8, timeScale = 1, stamina = 100;
+    let objects = [];
+    
+    // 1. LÓGICA DE CARREGAMENTO
+    let loadProgress = 0;
+    const loadInterval = setInterval(() => {
+      loadProgress += Math.random() * 15;
+      if (loadProgress > 100) loadProgress = 100;
+      document.getElementById('bar-fill').style.width = loadProgress + '%';
+      
+      if (loadProgress >= 100) {
+        clearInterval(loadInterval);
+        setTimeout(() => {
+          document.getElementById('loadingScreen').style.opacity = '0';
+          setTimeout(() => {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('startMenu').style.display = 'block';
+            state = 'MENU';
+          }, 800);
+        }, 500);
       }
-    }
+    }, 150);
 
-    function drawCactus(o) {
-      ctx.fillStyle = "#2d5a27";
-      ctx.fillRect(o.x, o.y - o.height, o.width, o.height); // Tronco
-      if(o.flower) { ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(o.x + o.width/2, o.y - o.height - 5, 5, 0, 7); ctx.fill(); }
-    }
+    const skins = [
+      { p1: "#556b2f", p2: "#8fb339", p3: "#3e5622", p4: "#2a3b17" },
+      { p1: "#483d8b", p2: "#a06cd5", p3: "#321450", p4: "#1a0b2a" },
+      { p1: "#8b0000", p2: "#ff5252", p3: "#5a0000", p4: "#3a0000" },
+      { p1: "#008b8b", p2: "#00ced1", p3: "#004d4d", p4: "#002b2b" }
+    ];
+    let currentSkin = 0;
 
-    function drawScenery() {
-      stars.forEach(s => { ctx.fillStyle = "white"; ctx.fillRect(s.x, s.y, s.size, s.size); });
-      ctx.fillStyle = "#fdfbd3"; ctx.beginPath(); ctx.arc(900, 80, 40, 0, 7); ctx.fill(); // Lua
-      ctx.fillStyle = "#d4a373"; ctx.fillRect(0, 385, 1000, 70); // Chão
-    }
+    const turtle = { x: 120, y: 340, dy: 0, gravity: 0.7, jump: 14, grounded: true, squash: 1 };
+    const stars = Array.from({ length: 120 }, () => ({ x: Math.random() * 1000, y: Math.random() * 300, s: Math.random() * 1.5 }));
 
     function drawTurtle() {
-      ctx.save(); ctx.translate(tortuga.x, tortuga.y);
-      ctx.fillStyle = "#4d6b1d"; // Patas
-      let walk = (gameState === 'PLAYING' && !isPaused) ? Math.sin(frame * 0.15) * 8 : 0;
-      ctx.fillRect(10, 35 + walk, 15, 10); ctx.fillRect(50, 35 - walk, 15, 10);
-      ctx.fillStyle = "#8fb339"; ctx.fillRect(80, 10, 20, 15); // Cabeça
-      ctx.fillStyle = "#3e5622"; ctx.beginPath(); ctx.moveTo(0, 35); ctx.quadraticCurveTo(40, -10, 80, 35); ctx.fill(); // Casco
+      const sk = skins[currentSkin];
+      ctx.save();
+      ctx.translate(turtle.x, turtle.y + (45 - 45 * turtle.squash));
+      ctx.scale(1, turtle.squash);
+      ctx.fillStyle = sk.p1;
+      let walk = Math.sin(frame * (speed * 0.02)) * 8;
+      ctx.beginPath(); ctx.roundRect(10, 32 + (turtle.grounded ? walk : 0), 18, 14, 5); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(52, 32 + (turtle.grounded ? -walk : 0), 18, 14, 5); ctx.fill();
+      ctx.fillStyle = sk.p2;
+      ctx.beginPath(); ctx.ellipse(90, 20, 14, 11, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(96, 17, 3, 0, 7); ctx.fill();
+      ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(97, 17, 1.5, 0, 7); ctx.fill();
+      const grad = ctx.createRadialGradient(40, 15, 5, 40, 20, 45);
+      grad.addColorStop(0, sk.p2); grad.addColorStop(1, sk.p3);
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.moveTo(0, 35); ctx.bezierCurveTo(0, 5, 80, 5, 80, 35); ctx.fill();
       ctx.restore();
     }
 
-    function update() {
-      if (gameState !== 'PLAYING' || isPaused) return;
-      frame++; speed += 0.002;
-      tortuga.dy += tortuga.gravity; tortuga.y += tortuga.dy;
-      if (tortuga.y > 340) { tortuga.y = 340; tortuga.dy = 0; tortuga.grounded = true; }
-      if (frame % 110 === 0) {
-        obstacles.push({ x: 1000, y: 385, width: 25, height: 40 + Math.random()*40, flower: Math.random() > 0.5 });
-      }
-      for (let i = obstacles.length - 1; i >= 0; i--) {
-        obstacles[i].x -= speed;
-        if (tortuga.x + 60 > obstacles[i].x && tortuga.x < obstacles[i].x + obstacles[i].width && tortuga.y + 30 > obstacles[i].y - obstacles[i].height) {
-          gameState = 'GAMEOVER'; snd(100, 'sawtooth', 0.5);
-        }
-        if (obstacles[i].x < -50) { obstacles.splice(i, 1); score++; document.getElementById('score').innerText = score * 10; }
-      }
+    function drawCactus(o) {
+      ctx.save();
+      const g = ctx.createLinearGradient(o.x, o.y, o.x + o.w, o.y);
+      g.addColorStop(0, "#2d5a27"); g.addColorStop(0.5, "#3d7a35"); g.addColorStop(1, "#1e3d1a");
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.roundRect(o.x, o.y - o.h, o.w, o.h, [10, 10, 0, 0]); ctx.fill();
+      if(o.h > 50) { ctx.beginPath(); ctx.roundRect(o.x - 12, o.y - o.h + 20, 12, 8, 4); ctx.roundRect(o.x - 12, o.y - o.h + 5, 8, 20, 4); ctx.fill(); }
+      if(o.h > 75) { ctx.beginPath(); ctx.roundRect(o.x + o.w, o.y - 30, 12, 8, 4); ctx.roundRect(o.x + o.w + 4, o.y - 45, 8, 20, 4); ctx.fill(); }
+      ctx.restore();
     }
 
-    function loop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawScenery();
-      if(gameState === 'PLAYING' || gameState === 'GAMEOVER') obstacles.forEach(drawCactus);
+    function initGame() {
+      state = 'PLAYING';
+      document.getElementById('startMenu').style.display = 'none';
+      document.getElementById('hud').style.display = 'flex';
+      document.getElementById('actionMenu').style.display = 'flex';
+      document.getElementById('jumpBtn').style.display = 'block';
+      document.getElementById('recordVal').innerText = highScore + "m";
+    }
+
+    function resetGame() {
+      score = 0; speed = 8; frame = 0; objects = []; stamina = 100;
+      turtle.y = 340; turtle.dy = 0;
+      document.getElementById('gameOver').style.display = 'none';
+      state = 'PLAYING'; document.getElementById('jumpBtn').style.display = 'block';
+    }
+
+    function togglePause() { isPaused = !isPaused; document.getElementById('pausedTag').style.display = isPaused ? 'block' : 'none'; }
+    function startSlowMo() { if(stamina > 20) timeScale = 0.3; }
+    function stopSlowMo() { timeScale = 1; }
+    function changeSkin() { currentSkin = (currentSkin + 1) % skins.length; }
+    function toggleMute() { isMuted = !isMuted; document.getElementById('muteBtn').innerText = isMuted ? "🔇" : "🔊"; }
+
+    function update() {
+      if(state !== 'PLAYING' || isPaused) return;
+      frame += timeScale;
+      speed += 0.0025 * timeScale;
+      score = Math.floor(frame / 5);
+      document.getElementById('scoreVal').innerText = score;
+      document.getElementById('speedIndicator').innerText = `VELOCIDADE: ${(speed / 8).toFixed(1)}x`;
+
+      if(timeScale < 1) { stamina -= 0.8; if(stamina <= 0) stopSlowMo(); } 
+      else { if(stamina < 100) stamina += 0.2; }
+      document.getElementById('staminaFillHud').style.width = stamina + "%";
+
+      turtle.dy += turtle.gravity * timeScale;
+      turtle.y += turtle.dy * timeScale;
+      if(turtle.y > 340) { turtle.y = 340; turtle.dy = 0; turtle.grounded = true; turtle.squash += (1 - turtle.squash) * 0.2; }
+
+      let spawnRate = Math.max(40, 100 - (speed * 1.5));
+      if(Math.floor(frame) % Math.floor(spawnRate) === 0) {
+        objects.push({ x: 1100, y: 385, w: 25, h: 45 + Math.random()*50 });
+      }
+
+      objects.forEach((o, i) => {
+        o.x -= speed * timeScale;
+        if(turtle.x + 65 > o.x && turtle.x + 20 < o.x + o.w && turtle.y + 35 > o.y - o.h) {
+          state = 'GAMEOVER';
+          if(score > highScore) { highScore = score; localStorage.setItem('tortugaNitro_v2', highScore); }
+          document.getElementById('finalScore').innerText = `Distância: ${score}m`;
+          document.getElementById('gameOver').style.display = 'block';
+          document.getElementById('jumpBtn').style.display = 'none';
+        }
+      });
+      if(objects.length > 0 && objects[0].x < -150) objects.shift();
+    }
+
+    function draw() {
+      ctx.fillStyle = "#020111"; ctx.fillRect(0, 0, baseW, baseH);
+      ctx.fillStyle = "white"; stars.forEach(s => ctx.fillRect(s.x, s.y, s.s, s.s));
+      ctx.fillStyle = "#d4a373"; ctx.fillRect(0, 385, baseW, 70);
+      objects.forEach(drawCactus);
       drawTurtle();
       update();
-      if (isPaused) { ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0,0,1000,450); }
-      if (gameState === 'GAMEOVER') { ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(0,0,1000,450); ctx.fillStyle="white"; ctx.textAlign="center"; ctx.font="30px Arial"; ctx.fillText("GAME OVER - Clique para reiniciar", 500, 225); }
-      requestAnimationFrame(loop);
+      requestAnimationFrame(draw);
     }
 
-    // EVENTOS
-    document.getElementById('pauseBtn').onclick = (e) => { e.stopPropagation(); isPaused = !isPaused; document.getElementById('pauseBtn').innerText = isPaused ? "VOLTAR" : "PAUSA"; };
-    document.getElementById('jumpBtn').onmousedown = (e) => { e.preventDefault(); doJump(); };
-    document.getElementById('jumpBtn').ontouchstart = (e) => { e.preventDefault(); e.stopPropagation(); doJump(); };
-    window.onmousedown = () => { if (gameState === 'GAMEOVER') location.reload(); };
-    window.onkeydown = (e) => { if (e.code === "Space") doJump(); if (e.code === "KeyP") document.getElementById('pauseBtn').onclick(e); };
+    window.addEventListener('keydown', (e) => { 
+        if(e.code === 'Space' && turtle.grounded && state === 'PLAYING' && !isPaused) { 
+            turtle.dy = -turtle.jump; turtle.grounded = false; turtle.squash = 0.8; 
+        } 
+    });
+    
+    const jBtn = document.getElementById('jumpBtn');
+    const handleJump = (e) => {
+        e.preventDefault();
+        if(turtle.grounded && state === 'PLAYING' && !isPaused) { 
+            turtle.dy = -turtle.jump; turtle.grounded = false; turtle.squash = 0.8; 
+        }
+    };
+    jBtn.addEventListener('mousedown', handleJump);
+    jBtn.addEventListener('touchstart', handleJump);
 
-    loop();
+    draw();
   </script>
 </body>
 </html>
